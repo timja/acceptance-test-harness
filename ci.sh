@@ -19,7 +19,8 @@ otr_args=
 if [[ -n ${JUNIT_OTR_SOCKET_PORT:-} ]]; then
 	gateway=$(docker network inspect bridge --format '{{(index .IPAM.Config 0).Gateway}}') || exit 1
 	otr_relay=$(docker run -d --rm --network host --entrypoint socat jenkins/ath:latest "TCP-LISTEN:${JUNIT_OTR_SOCKET_PORT},bind=${gateway},fork,reuseaddr" "TCP:127.0.0.1:${JUNIT_OTR_SOCKET_PORT}") || exit 1
-	otr_args="-Djunit.platform.reporting.open.xml.enabled=true -Djunit.platform.reporting.open.xml.socket=${JUNIT_OTR_SOCKET_PORT}"
+	# capture the output of each test, like Surefire does in its XML reports
+	otr_args="-Djunit.platform.reporting.open.xml.enabled=true -Djunit.platform.reporting.open.xml.socket=${JUNIT_OTR_SOCKET_PORT} -Djunit.platform.output.capture.stdout=true -Djunit.platform.output.capture.stderr=true"
 fi
 
 trap 'docker-compose kill && docker-compose down; [[ -z ${otr_relay} ]] || docker rm -f "${otr_relay}" >/dev/null' EXIT
